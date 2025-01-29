@@ -4,10 +4,13 @@ import { useState, useRef } from "react";
 import { IconButton } from "@mui/material";
 import MicOffIcon from '@mui/icons-material/MicOff';
 import MicIcon from '@mui/icons-material/Mic';
+import { startConnection } from "../../realtimeAPI/startConnection";
+import { stopConnection } from "../../realtimeAPI/stopConnection";
 
 const AudioWaveform = () => {
   // State to track whether the microphone is ON or OFF
   const [isMicOn, setIsMicOn] = useState(false);
+  let connection = null; // Store AI connection reference
 
   // References for managing different audio-related elements
   const barsRef = useRef([]); // Stores references to the waveform bars
@@ -24,6 +27,9 @@ const AudioWaveform = () => {
    */
   const startMicrophone = async () => {
     try {
+      connection = await startConnection(); // Start AI connection
+      console.log("AI Connection started", connection);
+
       // Request permission to access the microphone
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
@@ -62,7 +68,7 @@ const AudioWaveform = () => {
       animateBars(); // Start the waveform animation loop
       setIsMicOn(true); // Update state to indicate microphone is active
     } catch (err) {
-      console.error("Error accessing microphone:", err);
+      console.error("Error starting microphone and AI:", err);
     }
   };
 
@@ -73,6 +79,12 @@ const AudioWaveform = () => {
    * - Cancels the animation loop.
    */
   const stopMicrophone = () => {
+    if (connection) {
+      stopConnection(connection.pc); // Stop AI connection
+      connection = null;
+    }
+    console.log("Microphone and AI connection stopped.");
+
     if (microphoneStreamRef.current) {
       // Stop all tracks in the microphone stream
       microphoneStreamRef.current.getTracks().forEach((track) => track.stop());
@@ -133,4 +145,26 @@ const AudioWaveform = () => {
 
 export default AudioWaveform;
 
-// TODO Stop the microphone button from moving with the waveform ANDD make the gaps between each bar a little smaller AND add message when button is hover over.
+// https://chatgpt.com/g/g-p-678ecec56b608191a9f86acc72056cfa-genesis/c/6799e187-78e8-8000-bf3f-fd7b16fa79da
+// TODO: Prevent microphone button from shifting when waveform changes. 
+//  - Wrap the waveform and button in a flex container with a fixed height.
+
+// TODO: Reduce the gap between waveform bars. 
+//  - Update `gap-2` to `gap-1` in the waveform container class.
+
+// TODO: Show a tooltip when hovering over the microphone button. 
+//  - Use MUI’s `<Tooltip>` component to display a message on hover.
+
+// TODO: Fix overlapping audio when stopping and restarting connection. 
+//  - Ensure `stopConnection()` fully closes the previous connection before starting a new one. 
+//  - Clear any existing event listeners before re-initializing the audio stream. 
+
+// TODO: Improve color switching between inbound and outbound audio. 
+//  - Currently, only the microphone input is being analyzed. 
+//  - Capture **both microphone and AI audio output** by combining the streams. 
+//  - Use Web Audio API's `MediaElementSource` to analyze AI-generated audio. 
+
+// TODO: Fix AI agent misinterpreting spoken language as Spanish. 
+//  - Check if `speech-to-text` service is detecting the wrong language. 
+//  - Explicitly set the language model to `en-US` when initializing speech recognition. 
+//  - Log detected text to verify what the AI is actually hearing. 

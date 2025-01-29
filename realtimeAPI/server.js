@@ -11,9 +11,13 @@ const app = express();
 
 // Step 1: Apply CORS middleware globally
 // This allows specific origins to access the server resources
+// app.use(cors({
+//     origin: ["http://127.0.0.1:5500", "http://localhost:3001"], // Allow both these origins
+// }));
 app.use(cors({
-    origin: ["http://127.0.0.1:5500", "http://localhost:5500"], // Allow both these origins
+    origin: "*",
 }));
+
 
 // Step 2: Define the `/session` route
 // This route interacts with the OpenAI Realtime API to create a new session
